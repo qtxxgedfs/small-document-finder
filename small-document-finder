@@ -1,0 +1,76 @@
+"""
+Small Document Finder
+----------------
+A Python script to recursively search a directory for PDF files smaller than a specified size
+and export their details to a text file.
+
+Can also be used to find other specified files.(line 41)
+
+"""
+
+import os
+
+def find_small_pdfs(root_dir, output_file="small_pdfs.txt", size_limit_kb=50):
+    """
+    Recursively search for PDF files smaller than specified size in target directory.
+    
+    Args:
+        root_dir (str): Root directory to start search from
+        output_file (str): Path for the output text file (default: "small_pdfs.txt")
+        size_limit_kb (int): Maximum file size in KB (default: 50KB)
+    """
+    # Convert size limit to bytes (1KB = 1024 bytes)
+    size_limit = size_limit_kb * 1024
+    
+    # Validate root directory exists
+    if not os.path.isdir(root_dir):
+        print(f"Error: Directory '{root_dir}' does not exist!")
+        return
+    
+    # Initialize output file with header
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write("Absolute Path|Filename\n")
+        f.write("-" * 80 + "\n")
+    
+    count = 0
+    try:
+        # Walk through directory tree
+        for current_dir, subdirs, files in os.walk(root_dir):
+            for file in files:
+                # Check for PDF extension (case-insensitive)
+                if file.lower().endswith('.pdf'):
+                    file_path = os.path.join(current_dir, file)
+                    
+                    try:
+                        # Get file size and check against limit
+                        if os.path.getsize(file_path) < size_limit:
+                            abs_path = os.path.abspath(file_path)
+                            
+                            # Append to output file
+                            with open(output_file, 'a', encoding='utf-8') as f:
+                                f.write(f"{abs_path}|{file}\n")
+                            
+                            count += 1
+                            print(f"Found: {abs_path}")
+                    
+                    except Exception as e:
+                        print(f"Error processing {file_path}: {str(e)}")
+        
+        print(f"\nCompleted! Found {count} PDFs smaller than {size_limit_kb}KB")
+        print(f"Results saved to: {os.path.abspath(output_file)}")
+    
+    except PermissionError:
+        print("Error: Permission denied for some directories/files")
+    except Exception as e:
+        print(f"Script failed: {str(e)}")
+
+if __name__ == "__main__":
+    # ==================== CONFIGURATION ====================
+    # Update this path to your target directory
+    # Examples:
+    # Windows: r"C:\Users\YourName\Documents\target_dir"
+    # macOS/Linux: "/home/yourname/documents/target_dir"
+    TARGET_DIRECTORY = r"C:\Users\YourName\Documents\target_dir"
+    # =======================================================
+    
+    find_small_pdfs(TARGET_DIRECTORY)
